@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Puckzonu: Booty Blaster 3000</title>
+  <meta name="description" content="He jumps. He spreads his arms. You have a machine gun and 100 bullets. Aim for the butt.">
+  <meta property="og:title" content="Puckzonu: Booty Blaster 3000 🍑🔫">
+  <meta property="og:description" content="100 bullets. One jumping target. How perfect is your aim?">
+  <meta property="og:image" content="assets/poster.jpg">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍑</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Hind+Siliguri:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="hud">
+      <div class="stat"><span class="label">Score</span><span id="score" class="value">0</span></div>
+      <div class="stat"><span class="label" id="comboLabel">Combo</span><span id="combo" class="value">×1</span></div>
+      <div class="stat ammo" id="ammoStat">
+        <span class="label">Ammo</span><span id="ammo" class="value">100</span>
+        <div class="ammo-bar"><div id="ammoFill"></div></div>
+      </div>
+      <div class="stat"><span class="label">Best</span><span id="best" class="value">0</span></div>
+      <button id="soundBtn" type="button" aria-label="Toggle sound" title="Sound on/off">🔊</button>
+    </header>
+
+    <main id="arena">
+      <div id="shaker">
+        <video id="video" poster="assets/poster.jpg" muted loop playsinline autoplay preload="auto">
+          <source src="assets/target.mp4" type="video/mp4">
+          <source src="assets/target.webm" type="video/webm">
+        </video>
+        <div id="deck">
+          <div id="deckTitle">BOOTY BLASTER <span>3000</span></div>
+          <div id="tip">Tap = sniper precision · Hold = spray &amp; pray</div>
+        </div>
+        <canvas id="fx"></canvas>
+      </div>
+
+      <section id="startScreen" class="overlay">
+        <div class="card">
+          <h1>PUCKZONU</h1>
+          <h2>Booty Blaster <span>3000</span></h2>
+          <p class="tag">He jumps. He spreads his arms. He has <em>no idea</em> what's coming. 🍑</p>
+          <ul class="rules">
+            <li><b>🎯</b><span>Aim for the butt. Dead-center = <b>PERFECT</b></span></li>
+            <li><b>👆</b><span>Tap for precise shots, hold to machine-gun spray</span></li>
+            <li><b>🦘</b><span>Hit him mid-jump for a <b>2× AIR BUTT</b> bonus</span></li>
+            <li><b>🔥</b><span>Chain hits to build a combo (up to ×4)</span></li>
+            <li><b>🥥</b><span>Shoot falling coconuts for +10 ammo. Golden = slow-mo</span></li>
+          </ul>
+          <button id="startBtn" class="btn primary" type="button">🔫 LOCK &amp; LOAD</button>
+          <p class="small">100 bullets. No refunds. Press <kbd>H</kbd> to peek at the hitbox.</p>
+        </div>
+      </section>
+
+      <section id="overScreen" class="overlay hidden">
+        <div class="card">
+          <h2 id="overTitle">OUT OF AMMO!</h2>
+          <div id="finalScore">0</div>
+          <div id="newBest" class="hidden">🏆 NEW HIGH SCORE! 🏆</div>
+          <div id="rank"></div>
+          <div class="grid">
+            <div><span id="stAcc">0%</span><small>Accuracy</small></div>
+            <div><span id="stPerfect">0</span><small>Perfect shots</small></div>
+            <div><span id="stCombo">0</span><small>Best combo</small></div>
+            <div><span id="stTrees">0</span><small>Trees harmed 🌴</small></div>
+          </div>
+          <div class="row">
+            <button id="againBtn" class="btn primary" type="button">🔁 RELOAD</button>
+            <button id="shareBtn" class="btn" type="button">📣 BRAG</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="track.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
