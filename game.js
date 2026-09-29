@@ -200,6 +200,37 @@
         const t = ac.currentTime;
         [659, 880, 1175].forEach((f, i) => tone(t + i * 0.06, 'square', f, f, 0.08, 0.12, 0.005, 3000));
       },
+      // sinister "heh-heh-heh" chuckle over a low rumble, with a knife-glint "shing"
+      evilGrin() {
+        if (!ok()) return;
+        const t = ac.currentTime + 0.08;
+        tone(t, 'sine', 55, 48, 1.4, 0.35, 0.05);
+        tone(t, 'sawtooth', 82, 78, 1.3, 0.08, 0.1, 300);
+        tone(t, 'sawtooth', 87, 83, 1.3, 0.06, 0.1, 300);
+        tone(t + 0.05, 'sine', 3200, 5200, 0.18, 0.08);
+        tone(t + 0.08, 'sine', 6400, 6400, 0.3, 0.04);
+        for (let i = 0; i < 5; i++) {
+          const at = t + 0.25 + i * 0.15;
+          const f0 = 150 - i * 9;
+          const o = ac.createOscillator();
+          o.type = 'sawtooth';
+          o.frequency.setValueAtTime(f0, at);
+          o.frequency.exponentialRampToValueAtTime(f0 * 0.82, at + 0.11);
+          const g = ac.createGain();
+          env(g, at, 0.012, 0.5, 0.1);
+          const out = ac.createGain();
+          out.gain.value = 0.7;
+          for (const [fq, q] of [[650, 6], [1150, 8], [2500, 10]]) {
+            const f = ac.createBiquadFilter();
+            f.type = 'bandpass'; f.frequency.value = fq; f.Q.value = q;
+            o.connect(f).connect(g);
+          }
+          g.connect(out).connect(master);
+          o.start(at);
+          o.stop(at + 0.16);
+          noise(at, 0.06, 'bandpass', 2000, 0.12, 2);
+        }
+      },
       sadTrombone() {
         if (!ok()) return;
         const t = ac.currentTime;
@@ -229,6 +260,12 @@
   const coconuts = [];
   let bubble = null;
   let announce = null;
+
+  // the "perfect shot" sticker: pops out of the butt, grins at you, then vanishes
+  const STICKER_LIFE = 1.8;
+  const stickerImg = new Image();
+  stickerImg.src = 'assets/sticker.png';
+  let sticker = null;
   let recoil = 0, flash = 0, shake = 0, gunAngle = -2.4;
 
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -349,6 +386,8 @@
             rand(-90, 90) * s, rand(-70, 10) * s, 26, rand(0.9, 1.4), 0.9);
         }
         emoji('🍑', tx, ty, 0, -140 * s, 34, 0.9, 0.5);
+        sticker = { x0: b.x, y0: b.y, life: STICKER_LIFE, tilt: rand(-0.15, 0.15) };
+        Sound.evilGrin();
         if (S.perfects === 1) shout('FIRST PERFECT! 🍑');
       } else {
         say(pick(OUCH), false);
@@ -409,6 +448,7 @@
     });
     particles.length = texts.length = tracers.length = decals.length = coconuts.length = 0;
     bubble = null;
+    sticker = null;
     $('startScreen').classList.add('hidden');
     $('overScreen').classList.add('hidden');
     video.currentTime = 0;
@@ -558,6 +598,7 @@
     for (let i = decals.length - 1; i >= 0; i--) { decals[i].life -= dt; if (decals[i].life <= 0) decals.splice(i, 1); }
     if (bubble) { bubble.life -= dt; if (bubble.life <= 0) bubble = null; }
     if (announce) { announce.life -= dt; if (announce.life <= 0) announce = null; }
+    if (sticker) { sticker.life -= dt; if (sticker.life <= 0) sticker = null; }
 
     const sx = shake ? rand(-shake, shake) : 0, sy = shake ? rand(-shake, shake) : 0;
     shaker.style.transform = shake ? `translate(${sx}px, ${sy}px)` : '';
@@ -801,6 +842,50 @@
     ctx.restore();
   }
 
+  function drawSticker() {
+    if (!sticker || !stickerImg.complete || !stickerImg.naturalWidth) return;
+    const t = 1 - sticker.life / STICKER_LIFE; // 0 → 1
+    const size = W * 0.5;
+    const cx = W / 2, cy = VH * 0.45;
+    let k, scale, rot, alpha = 1;
+    if (t < 0.18) {
+      // burst out of the butt with an overshoot
+      const p = t / 0.18;
+      k = 1 - Math.pow(1 - p, 3);
+      scale = Math.max(0.1, 1 + 2.70158 * Math.pow(p - 1, 3) + 1.70158 * Math.pow(p - 1, 2)); // ease-out-back
+      rot = (1 - p) * -1.2;
+    } else if (t < 0.75) {
+      // hold and menacingly wobble
+      const p = (t - 0.18) / 0.57;
+      k = 1;
+      scale = 1 + Math.sin(p * Math.PI * 6) * 0.03;
+      rot = Math.sin(p * Math.PI * 4) * 0.06;
+    } else {
+      // spin away and vanish
+      const p = (t - 0.75) / 0.25;
+      k = 1;
+      scale = 1 - p * 0.9;
+      rot = p * 2.5;
+      alpha = 1 - p;
+    }
+    const x = sticker.x0 + (cx - sticker.x0) * k;
+    const y = sticker.y0 + (cy - sticker.y0) * k;
+    const h = size * (stickerImg.naturalHeight / stickerImg.naturalWidth);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y);
+    ctx.rotate(rot + sticker.tilt);
+    ctx.scale(scale, scale);
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = 18 * s;
+    ctx.shadowOffsetY = 6 * s;
+    ctx.drawImage(stickerImg, -size / 2, -h / 2, size, h);
+    ctx.restore();
+    if (t > 0.18 && t < 0.75) {
+      outlinedText('😈 HEHEHE...', x, y + h * scale / 2 + 6 * s, 24 * s, '#ff3b3b', alpha);
+    }
+  }
+
   function drawCrosshair(now) {
     if (!S.running || !S.pointerIn) return;
     const { x, y } = S.aim;
@@ -888,6 +973,7 @@
     }
 
     drawGun();
+    drawSticker();
     drawBubble(b);
 
     for (const t of texts) {
